@@ -1,0 +1,30 @@
+{
+  "id": "default-loot",
+  "icon": {
+    "item_type": "CHEST",
+    "name": "<red><bold>Default Loot"
+  },
+  "table": [
+    {
+      "provider": "command",
+      "weight": 0.25,
+      "loot": "say hi"
+    },
+    {
+      "provider": "command",
+      "weight": 0.25,
+      "loot": "give %player_name% cobblestone 1",
+      "icon": {
+        "item_type": "COMMAND_BLOCK",
+        "name": "<gold><bold>Give Cobblestone"
+      }
+    },
+    {
+      "provider": "item_explicit",
+      "weight": 0.25,
+      "loot": {
+        "item_type": "IRON_BLOCK"
+      }
+    }
+  ]
+}

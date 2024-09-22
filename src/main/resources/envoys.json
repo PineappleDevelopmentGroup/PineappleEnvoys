@@ -1,0 +1,6 @@
+{
+  "activate-all": false,
+  "active": [
+    "envoys/default-envoy.json"
+  ]
+}
