@@ -65,7 +65,7 @@ abstract class AbstractIOHandler<R : MarkedKey<String>>(
         for (key in registry.keys()) {
             val serializable = registry.get(key).orThrow()
             if (!serializable.dirty) {
-                return
+                continue
             }
             val content = saveContent(key)
             if (content.isJsonNull || (content.isJsonObject && content.asJsonObject.isEmpty)) {

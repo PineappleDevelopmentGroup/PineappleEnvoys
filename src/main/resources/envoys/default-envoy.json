@@ -1,0 +1,36 @@
+{
+  "id": "default-envoy",
+  "drops": [
+    {
+      "loot": "default-loot",
+      "weight": 1,
+      "block_type": "BEDROCK",
+      "hologram": {
+        "text": [
+          "<dark_gray>↠↠<gray>Common Envoy<dark_gray>↞↞"
+        ],
+        "relative_position": {
+          "x": 0.5,
+          "y": 1.25,
+          "z": 0.5
+        }
+      }
+    }
+  ],
+  "envoy_amount": 5,
+  "world": "world",
+  "region": {
+    "minX": 0,
+    "minY": 150,
+    "minZ": 0,
+    "maxX": 20,
+    "maxY": 160,
+    "maxZ": 20
+  },
+  "blocks": {
+    "policy": "whitelist",
+    "entries": [
+      "GOLD_BLOCK"
+    ]
+  }
+}
