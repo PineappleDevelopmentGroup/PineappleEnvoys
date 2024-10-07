@@ -1,6 +1,7 @@
 package sh.miles.pineappleenvoys.command
 
 import com.google.common.primitives.Ints
+import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.util.StringUtil
@@ -10,9 +11,12 @@ import sh.miles.pineapple.command.CommandLabel
 import sh.miles.pineapple.function.Option.None
 import sh.miles.pineapple.function.Option.Some
 import sh.miles.pineappleenvoys.GlobalConfig
+import sh.miles.pineappleenvoys.PineappleEnvoysPlugin
 import sh.miles.pineappleenvoys.Registries
+import sh.miles.pineappleenvoys.envoy.EnvoyEvent
 import sh.miles.pineappleenvoys.envoy.tile.EnvoyTile
 import sh.miles.pineappleenvoys.envoy.tile.EnvoyTileType
+import java.time.LocalTime
 import java.util.stream.IntStream
 import kotlin.streams.toList
 
@@ -77,6 +81,58 @@ private object EnvoysDebugEvent : Command(CommandLabel("event", "pineapple-envoy
     init {
         registerSubcommand(DebugEnvoysPlace)
         registerSubcommand(DebugEnvoysEventScan)
+        registerSubcommand(DebugEnvoysStart)
+    }
+
+    private object DebugEnvoysStart : Command(CommandLabel("start", "pineapple-envoys.command.debug.event.start")) {
+        override fun execute(sender: CommandSender, args: Array<out String>): Boolean {
+            if (sender !is Player) {
+                sender.sendMessage("Only players can run /pineapple-envoys event place <envoy-configuration>")
+                return true
+            }
+
+            val arg = if (args.isEmpty()) "none" else args[0]
+            val delay = if (args.size < 2) 0 else args[1].toInt()
+            when (val envoyOption = Registries.ENVOYS.get(arg)) {
+                is Some -> {
+                    val envoy = envoyOption.some()
+                    sender.spigot().sendMessage(
+                        PineappleChat.parse(
+                            "<green>Starting debug envoy event in $delay minutes"
+                        )
+                    )
+
+                    val now = LocalTime.now().plusMinutes(delay.toLong())
+                    envoy.event.startEventAt(envoy, now)
+                }
+
+                is None -> {
+                    sender.spigot().sendMessage(
+                        PineappleChat.parse(
+                            "<red>Failed to find envoy configuration $arg"
+                        )
+                    )
+                }
+            }
+
+            return true
+        }
+
+        override fun complete(sender: CommandSender, args: Array<out String>): MutableList<String> {
+            if (args.size == 1) {
+                return StringUtil.copyPartialMatches(args[0], Registries.ENVOYS.keys().toList(), mutableListOf())
+            }
+
+            if (args.size == 2) {
+                return StringUtil.copyPartialMatches(
+                    args[1],
+                    listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10).map { it.toString() },
+                    mutableListOf()
+                )
+            }
+
+            return mutableListOf()
+        }
     }
 
     private object DebugEnvoysPlace : Command(CommandLabel("place", "pineapple-envoys.command.debug.event.place")) {
@@ -106,7 +162,7 @@ private object EnvoysDebugEvent : Command(CommandLabel("event", "pineapple-envoy
                         return true
                     }
 
-                    EnvoyTileType.place(target.location, envoy.drops.poll())
+                    EnvoyTileType.place(target.location, null, envoy.drops.poll())
                 }
 
                 is None -> {
@@ -148,10 +204,13 @@ private object EnvoysDebugEvent : Command(CommandLabel("event", "pineapple-envoy
                     )
                     envoy.generateValidSpawnLocations().whenComplete { result, exception ->
                         if (exception != null) {
-                            PineappleChat.parse(
-                                "<red>Envoy scan failed ${exception.message} see console for more details"
+                            sender.spigot().sendMessage(
+                                PineappleChat.parse(
+                                    "<red>Envoy scan failed ${exception.message} see console for more details"
+                                )
                             )
-                            throw RuntimeException(exception)
+                            exception.printStackTrace()
+                            return@whenComplete
                         }
 
                         val builder = StringBuilder().append("<green>Scanned Locations Found")

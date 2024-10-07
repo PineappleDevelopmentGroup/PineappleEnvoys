@@ -12,6 +12,7 @@ import sh.miles.pineapple.util.serialization.SerializedSerializeContext
 import sh.miles.pineapple.util.serialization.adapter.SerializedAdapter
 import sh.miles.pineappleenvoys.configuration.EnvoyConfiguration
 import sh.miles.pineappleenvoys.envoy.EnvoyDrop
+import sh.miles.pineappleenvoys.envoy.EnvoyEventSpec
 
 object EnvoyConfigurationAdapter : SerializedAdapter<EnvoyConfiguration> {
 
@@ -20,6 +21,7 @@ object EnvoyConfigurationAdapter : SerializedAdapter<EnvoyConfiguration> {
     private const val WORLD = "world"
     private const val ENVOY_AMOUNT = "envoy_amount"
     private const val REGION = "region"
+    private const val EVENT = "event"
     private const val BLOCKS = "blocks"
     private const val BLOCKS_C_POLICY = "policy"
     private const val BLOCKS_C_ENTRIES = "entries"
@@ -37,7 +39,8 @@ object EnvoyConfigurationAdapter : SerializedAdapter<EnvoyConfiguration> {
             parent.getPrimitive(ENVOY_AMOUNT).map { it.asInt }.orThrow("Missing required field $ENVOY_AMOUNT")
         val region = parent.get(REGION).map { context.deserialize(it, BoundingBox::class.java) }
             .orThrow("Missing required field $REGION")
-
+        val event = parent.get(EVENT).map { context.deserialize(it, EnvoyEventSpec::class.java) }
+            .orThrow("Missing required field $EVENT")
         val blocksParent = parent.get(BLOCKS).map { it.asObject }.orThrow("Missing required field $BLOCKS")
         val blocksPolicy = blocksParent.getPrimitive(BLOCKS_C_POLICY).map { SetPolicy.valueOf(it.asString.uppercase()) }
             .orThrow("Missing required field $BLOCKS_C_POLICY")
@@ -46,7 +49,7 @@ object EnvoyConfigurationAdapter : SerializedAdapter<EnvoyConfiguration> {
                 .filter { it != null && !it.isAir }.toHashSet()
         }.orThrow("Missing required field $BLOCKS_C_ENTRIES")
 
-        return EnvoyConfiguration(id, weightedDrops, world, region, envoyAmount, PolicySet(blocksEntries, blocksPolicy))
+        return EnvoyConfiguration(id, weightedDrops, world, region, event, envoyAmount, PolicySet(blocksEntries, blocksPolicy))
     }
 
     override fun serialize(obj: EnvoyConfiguration, context: SerializedSerializeContext): SerializedElement {

@@ -14,6 +14,7 @@ import sh.miles.pineapple.tiles.api.TileType
 import sh.miles.pineapple.tiles.api.Tiles
 import sh.miles.pineappleenvoys.PineappleEnvoysPlugin
 import sh.miles.pineappleenvoys.envoy.EnvoyDrop
+import sh.miles.pineappleenvoys.envoy.EnvoyEvent
 import sh.miles.pineappleenvoys.util.BlockReplacer
 
 object EnvoyTileType : TileType<EnvoyTile>(false) {
@@ -42,16 +43,39 @@ object EnvoyTileType : TileType<EnvoyTile>(false) {
 
     override fun onInteract(event: PlayerInteractEvent, tile: EnvoyTile) {
         if (event.hand == EquipmentSlot.OFF_HAND) return
+        val player = event.player
+        val location = tile.location!!
         val drop = tile.drop!!
         drop.loot.loot.poll().giveLoot(event.player)
-        val location = tile.location!!
-        PineappleEnvoysPlugin.ticker.queue(BlockReplacer(location, Material.AIR.createBlockData()))
-        Bukkit.getEntity(tile.textDisplay!!)?.remove()
-        Tiles.getInstance().deleteTile(tile.location!!) { true }
+        for (effect in drop.effects) {
+            effect.play(player, location)
+        }
+        destroy(tile.location!!)
+
+        val envoyEvent = tile.event
+        if (envoyEvent != null) {
+            envoyEvent.decEnvoysLeft()
+            Bukkit.getServer().spigot().broadcast(
+                envoyEvent.spec.collectMessage.component(
+                    mutableMapOf<String, Any>(
+                        "player" to event.player.name,
+                        "left" to envoyEvent.envoysLeft
+                    )
+                )
+            )
+        }
     }
 
-    fun place(location: Location, drop: EnvoyDrop) {
+    fun destroy(location: Location) {
+        val tile = Tiles.getInstance().deleteTile(location) { it is EnvoyTile }
+        if (tile == null || tile !is EnvoyTile) return
+        PineappleEnvoysPlugin.ticker.queue(BlockReplacer(location, Material.AIR.createBlockData()))
+        Bukkit.getEntity(tile.textDisplay!!)?.remove()
+    }
+
+    fun place(location: Location, event: EnvoyEvent?, drop: EnvoyDrop) {
         val tile = EnvoyTile()
+        tile.event = event
         tile.drop = drop
         tile.location = location
         tile.textDisplay = drop.hologram.spawn(location) {

@@ -9,6 +9,7 @@ import sh.miles.pineapple.collection.set.PolicySet
 import sh.miles.pineappleenvoys.GlobalConfig
 import sh.miles.pineappleenvoys.PineappleEnvoysPlugin
 import sh.miles.pineappleenvoys.envoy.EnvoyDrop
+import sh.miles.pineappleenvoys.envoy.EnvoyEventSpec
 import sh.miles.pineappleenvoys.util.ChunkScanner
 import sh.miles.pineappleenvoys.util.ChunkSnapshotRetriever
 import sh.miles.pineappleenvoys.util.MarkedKey
@@ -23,6 +24,7 @@ data class EnvoyConfiguration(
     val drops: WeightedRandom<EnvoyDrop>,
     val world: World,
     val region: BoundingBox,
+    val event: EnvoyEventSpec,
     val envoyAmount: Int,
     val spawnBlockSet: PolicySet<Material>
 ) : MarkedKey<String> {
@@ -86,7 +88,11 @@ data class EnvoyConfiguration(
             while (expectedSize != sizeCounter.get()) {
                 if (expireCounter > GlobalConfig.EXPIRE_SEARCH) {
                     PineappleLib.getLogger()
-                        .severe("Envoys has suspended search after inability to find suitable spawns after 2 minutes")
+                        .severe(
+                            "Envoys has suspended search after inability to find suitable spawns after %s seconds".format(
+                                GlobalConfig.EXPIRE_SEARCH
+                            )
+                        )
                     return@supplyAsync locationCollector.stream().toList()
                 }
 
@@ -97,6 +103,10 @@ data class EnvoyConfiguration(
                 }
 
                 lock.lock()
+            }
+
+            if (locationCollector.size == 0) {
+                throw IllegalStateException("Unable to acquire any spawn locations for envoy")
             }
 
             if (locationCollector.size < envoyAmount) {

@@ -14,7 +14,38 @@
           "y": 1.25,
           "z": 0.5
         }
-      }
+      },
+      "effects": [
+        {
+          "click_effect": "sound",
+          "effect": {
+            "sound": "entity.dragon_fireball.explode",
+            "category": "BLOCKS",
+            "pitch": 0.5,
+            "volume": 1.0
+          }
+        },
+        {
+          "click_effect": "firework",
+          "effect": {
+            "power": 2,
+            "effects": [
+              {
+                "flicker": true,
+                "trail": true,
+                "type": "STAR",
+                "colors": [
+                  "#DDDDDD",
+                  "#9E9D9D"
+                ],
+                "fade_colors": [
+                  "#000000"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     }
   ],
   "envoy_amount": 5,
@@ -26,6 +57,22 @@
     "maxX": 20,
     "maxY": 160,
     "maxZ": 20
+  },
+  "event": {
+    "start_message": "<green>An envoy event has begun!",
+    "end_message": "<red>An envoy event has ended!",
+    "envoy_collect_message": "<$player> has collect an envoy there are <$left> left",
+    "times": [
+      "20:33",
+      "20:40"
+    ],
+    "messages": [
+      {
+        "before": 1,
+        "message": "<red>An envoy will begin in 1 minute"
+      }
+    ],
+    "event_length": 2
   },
   "blocks": {
     "policy": "whitelist",

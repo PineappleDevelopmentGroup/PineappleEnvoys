@@ -13,6 +13,7 @@ import sh.miles.pineapple.tiles.api.TileType
 import sh.miles.pineapple.tiles.api.Tiles
 import sh.miles.pineappleenvoys.PineappleEnvoysPlugin
 import sh.miles.pineappleenvoys.envoy.EnvoyDrop
+import sh.miles.pineappleenvoys.envoy.EnvoyEvent
 import sh.miles.pineappleenvoys.util.BlockReplacer
 import java.util.UUID
 
@@ -21,6 +22,7 @@ class EnvoyTile : Tile {
     private val LOC_DEL = NamespacedKey.fromString("pineapple-envoy:location")!!
     private val TEXT_DEL = NamespacedKey.fromString("pineapple-envoy:text_display")!!
 
+    var event: EnvoyEvent? = null
     var drop: EnvoyDrop? = null
     var location: Location? = null
     var textDisplay: UUID? = null

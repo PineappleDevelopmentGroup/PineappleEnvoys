@@ -5,8 +5,9 @@ import sh.miles.pineapple.util.serialization.SerializedDeserializeContext
 import sh.miles.pineapple.util.serialization.SerializedElement
 import sh.miles.pineapple.util.serialization.SerializedSerializeContext
 import sh.miles.pineapple.util.serialization.adapter.SerializedAdapter
+import sh.miles.pineapple.util.spec.HologramSpec
 import sh.miles.pineappleenvoys.envoy.EnvoyDrop
-import sh.miles.pineappleenvoys.util.spec.HologramSpec
+import sh.miles.pineappleenvoys.envoy.click.EnvoyClickEffectEntry
 
 object EnvoyDropAdapter : SerializedAdapter<EnvoyDrop> {
 
@@ -14,6 +15,7 @@ object EnvoyDropAdapter : SerializedAdapter<EnvoyDrop> {
     private const val BLOCK_TYPE = "block_type"
     private const val WEIGHT = "weight"
     private const val HOLOGRAM = "hologram"
+    private const val EFFECTS = "effects"
 
     override fun deserialize(element: SerializedElement, context: SerializedDeserializeContext): EnvoyDrop {
         val parent = element.asObject
@@ -22,8 +24,11 @@ object EnvoyDropAdapter : SerializedAdapter<EnvoyDrop> {
         if (blockType == null || !blockType.isBlock) throw IllegalStateException("The given $BLOCK_TYPE is not a block")
         val weight = parent.getPrimitive(WEIGHT).map { it.asDouble }.orThrow("Missing required field $WEIGHT")
         val hologram = parent.get(HOLOGRAM).map { context.deserialize(it, HologramSpec::class.java) }.orThrow("Missing required field $HOLOGRAM")
+        val effects = parent.getArray(EFFECTS).map {
+            it.stream().map { e -> context.deserialize(e, EnvoyClickEffectEntry::class.java) }.toList()
+        }.orThrow("Missing required field $EFFECTS")
 
-        return EnvoyDrop(lootId, blockType, weight, hologram)
+        return EnvoyDrop(lootId, blockType, weight, hologram, effects)
     }
 
     override fun serialize(obj: EnvoyDrop, context: SerializedSerializeContext): SerializedElement {
