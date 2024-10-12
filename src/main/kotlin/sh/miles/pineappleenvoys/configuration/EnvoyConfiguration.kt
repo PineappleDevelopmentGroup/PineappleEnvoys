@@ -38,7 +38,7 @@ data class EnvoyConfiguration(
     }
 
     fun generateValidSpawnLocations(): CompletableFuture<List<UnrealizedLocation>> {
-        return CompletableFuture.supplyAsync {
+        return CompletableFuture.supplyAsync({
             val chunks = mutableListOf<Pair<Int, Int>>()
 
             for (x in (region.minX.toInt() until region.maxX.toInt() step 16)) {
@@ -48,7 +48,6 @@ data class EnvoyConfiguration(
             }
 
             // we want to ensure randomness rather than uniformity between spawns.
-            // By dispatching the snapshot retrievers and
             chunks.shuffle()
 
             if (chunks.isEmpty()) {
@@ -57,7 +56,6 @@ data class EnvoyConfiguration(
                 chunks.add(Pair(region.minX.toInt().shr(4), region.maxX.toInt().shr(4)))
             }
 
-            val lock = ReentrantLock()
             val expectedSize = chunks.size
             val sizeCounter = AtomicInteger(0)
             val locationCollector = ConcurrentLinkedQueue<UnrealizedLocation>()
@@ -72,12 +70,12 @@ data class EnvoyConfiguration(
                     )
                 ) { snapshot ->
                     if (snapshot == null) return@queueSupplier
-                    CompletableFuture.runAsync {
+                    CompletableFuture.runAsync({
                         val scanner = ChunkScanner(snapshot, this)
                         scanner.scan()
                         locationCollector.addAll(scanner.collect())
                         sizeCounter.incrementAndGet()
-                    }.exceptionally {
+                    }, PineappleEnvoysPlugin.EXECUTOR_SERVICE).exceptionally {
                         throw it
                     }
                 }
@@ -89,9 +87,7 @@ data class EnvoyConfiguration(
                 if (expireCounter > GlobalConfig.EXPIRE_SEARCH) {
                     PineappleLib.getLogger()
                         .severe(
-                            "Envoys has suspended search after inability to find suitable spawns after %s seconds".format(
-                                GlobalConfig.EXPIRE_SEARCH
-                            )
+                            "Envoys has suspended search after inability to find suitable spawns after ${GlobalConfig.EXPIRE_SEARCH} seconds"
                         )
                     return@supplyAsync locationCollector.stream().toList()
                 }
@@ -101,8 +97,6 @@ data class EnvoyConfiguration(
                     ++expireCounter
                     lastCheck = now
                 }
-
-                lock.lock()
             }
 
             if (locationCollector.size == 0) {
@@ -114,10 +108,11 @@ data class EnvoyConfiguration(
                     .warning("Envoys finished its search successfully, but was only able to acquire ${locationCollector.size} spawn locations when the specified amount is $envoyAmount")
             }
 
+            // peak random do it again ladies and gents!
             val randomizedResult = locationCollector.stream().toList().shuffled()
             val drop = if (randomizedResult.size > envoyAmount) randomizedResult.size - envoyAmount else 0
             return@supplyAsync randomizedResult.dropLast(drop)
-        }
+        }, PineappleEnvoysPlugin.EXECUTOR_SERVICE)
     }
 
 }

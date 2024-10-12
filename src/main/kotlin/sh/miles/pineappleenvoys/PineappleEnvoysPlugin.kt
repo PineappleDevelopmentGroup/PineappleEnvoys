@@ -19,10 +19,13 @@ import sh.miles.pineappleenvoys.util.adapter.EnvoyClickEffectEntryAdapter
 import sh.miles.pineappleenvoys.util.adapter.EnvoyDropAdapter
 import sh.miles.pineappleenvoys.util.adapter.EnvoyEventSpecAdapter
 import sh.miles.pineappleenvoys.util.adapter.LootEntryAdapter
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class PineappleEnvoysPlugin : JavaPlugin() {
 
     companion object {
+        val EXECUTOR_SERVICE: ExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1)
         lateinit var plugin: Plugin
             private set
         lateinit var ticker: ServerThreadTicker
@@ -40,6 +43,8 @@ class PineappleEnvoysPlugin : JavaPlugin() {
         Tiles.getInstance().registerTileType(EnvoyTileType)
         setupSerializers()
         Registries.load(this, jsonHelper)
+        PineappleLib.getConfigurationManager()
+            .createConfiguration(dataFolder.resolve("config.yml"), GlobalConfig::class.java, GlobalConfig).save(false)
 
         Tiles.getInstance().loadSpawnChunks()
 

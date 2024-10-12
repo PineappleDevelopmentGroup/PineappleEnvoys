@@ -11,9 +11,10 @@ internal object EnvoysCommand : Command(
     init {
         registerSubcommand(EnvoysDebugCommand)
         registerSubcommand(EnvoysLootCommand)
+        registerSubcommand(EnvoysStartCommand)
 
         // TESTING
-        registerSubcommand(EnvoysTestCommand)
+        // registerSubcommand(EnvoysTestCommand)
         // END TESTING
     }
 }

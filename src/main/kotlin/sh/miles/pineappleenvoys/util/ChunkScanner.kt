@@ -15,16 +15,15 @@ class ChunkScanner(private val snapshot: ChunkSnapshot, private val envoy: Envoy
     private val location = mutableListOf<UnrealizedLocation>()
 
     fun scan() {
-        println("SNAPSHOT ${snapshot.x},${snapshot.z}")
         val temporaryHold = mutableListOf<UnrealizedLocation>()
         val snapshot = snapshot
         val spawnBlockSet = envoy.spawnBlockSet
         for (x in (0 until 16)) {
-            val acX = snapshot.x.shr(4) + x
+            val acX = snapshot.x.shl(4) + x
             for (y in (envoy.region.minY.toInt() until envoy.region.maxY.toInt())) {
                 val yPlusOne = y + 1
                 for (z in 0 until 16) {
-                    val acZ = snapshot.z.shr(4) + z
+                    val acZ = snapshot.z.shl(4) + z
 
                     if (!envoy.region.contains(acX.toDouble(), y.toDouble(), acZ.toDouble())) {
                         continue
@@ -41,11 +40,6 @@ class ChunkScanner(private val snapshot: ChunkSnapshot, private val envoy: Envoy
                     if (!snapshot.getBlockType(x, yPlusOne, z).isAir) {
                         continue
                     }
-
-//                    println("===")
-//                    println(snapshot.getBlockType(x, y, z))
-//                    println("$x,$y,$z | $acX,$y,$acZ > ${acX.toDouble()},${y},${acZ}")
-//                    println("===")
 
                     temporaryHold.add(UnrealizedLocation(acX, yPlusOne, acZ))
                 }
